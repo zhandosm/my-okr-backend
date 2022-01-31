@@ -5,7 +5,9 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  ClassSerializerInterceptor,
+  UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,23 +22,18 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  findOne(
+    @Query('id') id: string,
+    @Query('username') username: string,
+    @Query('email') email: string,
+  ) {
+    return this.usersService.findOne(id, username, email);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
   }
 }

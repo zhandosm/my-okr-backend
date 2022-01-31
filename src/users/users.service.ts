@@ -27,20 +27,37 @@ export class UsersService {
     return newUser.save();
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string, username: string, email: string): Promise<User> {
+    if (!id && !username && !email) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: 'Invalid query parameters',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const orQuery = [];
+    id ? orQuery.push({ _id: id }) : null;
+    username ? orQuery.push({ username: username }) : null;
+    email ? orQuery.push({ email: email }) : null;
+    const user = await this.userModel
+      .findOne({ $or: orQuery }, { _id: 0 })
+      .lean();
+    if (!user) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: 'Not Found',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return user;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
   }
 
   async doesUserExists(createUserDTO: CreateUserDto): Promise<any> {
