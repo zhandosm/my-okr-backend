@@ -24,12 +24,8 @@ export class UsersController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
-  findOne(
-    @Query('id') id: string,
-    @Query('username') username: string,
-    @Query('email') email: string,
-  ) {
-    return this.usersService.findOne(id, username, email);
+  findOne(@Query('username') username: string) {
+    return this.usersService.findOne(username);
   }
 
   @Patch(':id')

@@ -13,6 +13,7 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new MongoooseExceptionFilter());
+  app.enableCors();
   await app.listen(3000);
 }
 bootstrap();
