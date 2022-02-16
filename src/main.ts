@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MongoooseExceptionFilter } from './common/filters/mongoose-exception.filter';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,7 +14,16 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new MongoooseExceptionFilter());
+  // CORS
   app.enableCors();
+  // Swagger Setup
+  const config = new DocumentBuilder()
+    .setTitle('MyOKR')
+    .setDescription('MyOKR Backend APIs Documentation')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
   await app.listen(3000);
 }
 bootstrap();
