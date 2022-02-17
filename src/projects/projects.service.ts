@@ -24,14 +24,26 @@ export class ProjectsService {
     return newUser.save();
   }
 
-  async findOne(id: string): Promise<Project> {
-    const project = await this.projectModel.findOne({ _id: id }).lean();
-    if (!project) throw new NotFoundException("Project doesn't exist");
-    return project;
+  async doesProjectExists(
+    createProjectDto: CreateProjectDto,
+  ): Promise<boolean> {
+    const project = await this.projectModel.findOne({
+      title: createProjectDto.title,
+    });
+    if (project) {
+      return true;
+    }
+    return false;
   }
 
   async findOneByUserId(id: string): Promise<Project> {
     const project = await this.projectModel.findOne({ userId: id }).lean();
+    if (!project) throw new NotFoundException("Project doesn't exist");
+    return project;
+  }
+
+  async findOne(id: string): Promise<Project> {
+    const project = await this.projectModel.findOne({ _id: id }).lean();
     if (!project) throw new NotFoundException("Project doesn't exist");
     return project;
   }
@@ -45,18 +57,6 @@ export class ProjectsService {
       throw new NotFoundException("Project doesn't exist");
     }
     return update;
-  }
-
-  async doesProjectExists(
-    createProjectDto: CreateProjectDto,
-  ): Promise<boolean> {
-    const project = await this.projectModel.findOne({
-      title: createProjectDto.title,
-    });
-    if (project) {
-      return true;
-    }
-    return false;
   }
 
   async delete(id: string) {
