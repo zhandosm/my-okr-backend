@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
 import { ObjectivesModule } from './objectives/objectives.module';
+import { KeyresultsModule } from './keyresults/keyresults.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ObjectivesModule } from './objectives/objectives.module';
     AuthModule,
     ProjectsModule,
     ObjectivesModule,
+    KeyresultsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

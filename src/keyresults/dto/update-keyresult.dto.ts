@@ -1,6 +1,6 @@
 import { IsString, IsOptional } from 'class-validator';
 
-export class UpdateObjectiveDto {
+export class UpdateKeyResultDto {
   @IsOptional()
   @IsString()
   title?: string;

@@ -14,7 +14,7 @@ import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('objectives')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class ObjectivesController {
   constructor(private readonly objectivesService: ObjectivesService) {}
 
