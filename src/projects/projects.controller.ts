@@ -6,11 +6,12 @@ import {
   Body,
   Param,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { PinProjectDto } from './dto/pin-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Controller('projects')
 @UseGuards(JwtAuthGuard)
@@ -23,8 +24,8 @@ export class ProjectsController {
   }
 
   @Get('user/:id')
-  findOneByUserId(@Param('id') id: string) {
-    return this.projectsService.findOneByUserId(id);
+  findByUserId(@Param('id') id: string) {
+    return this.projectsService.findByUserId(id);
   }
 
   @Get(':id')
@@ -32,12 +33,12 @@ export class ProjectsController {
     return this.projectsService.findOne(id);
   }
 
-  @Post(':id')
-  updatePinProject(
+  @Patch(':id')
+  update(
     @Param('id') id: string,
-    @Body() pinProjectDto: PinProjectDto,
+    @Body() updateObjectiveDto: UpdateProjectDto,
   ) {
-    return this.projectsService.pinProject(id, pinProjectDto);
+    return this.projectsService.update(id, updateObjectiveDto);
   }
 
   @Delete(':id')

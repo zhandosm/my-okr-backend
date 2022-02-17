@@ -5,9 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { PinProjectDto } from './dto/pin-project.dto';
 import { Model } from 'mongoose';
 import { Project, ProjectDocument } from './models/project.model';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -27,19 +27,14 @@ export class ProjectsService {
   async doesProjectExists(
     createProjectDto: CreateProjectDto,
   ): Promise<boolean> {
-    const project = await this.projectModel.findOne({
+    return !!(await this.projectModel.findOne({
       title: createProjectDto.title,
-    });
-    if (project) {
-      return true;
-    }
-    return false;
+    }));
   }
 
-  async findOneByUserId(id: string): Promise<Project> {
-    const project = await this.projectModel.findOne({ userId: id }).lean();
-    if (!project) throw new NotFoundException("Project doesn't exist");
-    return project;
+  async findByUserId(userId: string): Promise<Project[]> {
+    const projects = await this.projectModel.find({ userId: userId });
+    return projects;
   }
 
   async findOne(id: string): Promise<Project> {
@@ -48,12 +43,16 @@ export class ProjectsService {
     return project;
   }
 
-  async pinProject(id: string, pinProjectDto: PinProjectDto) {
-    const update = await this.projectModel.updateOne(
+  async update(
+    id: string,
+    updateProjectDto: UpdateProjectDto,
+  ): Promise<Project> {
+    const update = await this.projectModel.findOneAndUpdate(
       { _id: id },
-      { isPinned: pinProjectDto.isPinned },
+      updateProjectDto,
+      { new: true },
     );
-    if (!update.modifiedCount) {
+    if (!update) {
       throw new NotFoundException("Project doesn't exist");
     }
     return update;
