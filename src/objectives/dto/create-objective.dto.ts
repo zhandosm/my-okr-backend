@@ -1,4 +1,4 @@
-import { IsString, IsDateString } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class CreateObjectiveDto {
   @IsString()
@@ -12,7 +12,4 @@ export class CreateObjectiveDto {
 
   @IsString()
   description: string;
-
-  @IsDateString()
-  deadline: Date;
 }

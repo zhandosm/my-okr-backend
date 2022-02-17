@@ -8,8 +8,4 @@ export class UpdateObjectiveDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsDateString()
-  deadline?: Date;
 }

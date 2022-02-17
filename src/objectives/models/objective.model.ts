@@ -15,8 +15,6 @@ export class Objective {
   title: string;
   @Prop()
   description: string;
-  @Prop()
-  deadline: Date;
 }
 
 export const ObjectiveSchema = SchemaFactory.createForClass(Objective);
