@@ -19,7 +19,7 @@ export class KeyResultsService {
   async create(createKeyResultDto: CreateKeyResultDto): Promise<KeyResult> {
     if (await this.checkKeyResultDuplicate(createKeyResultDto))
       throw new ConflictException(
-        `Objective ${createKeyResultDto.title} already exists`,
+        `Key Result ${createKeyResultDto.title} already exists`,
       );
     const newObjective = new this.keyResultModel(createKeyResultDto);
     return newObjective.save();
