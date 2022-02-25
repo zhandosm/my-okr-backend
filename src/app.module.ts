@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
 import { ObjectivesModule } from './objectives/objectives.module';
 import { KeyResultsModule } from './keyresults/keyresults.module';
+import { TodosModule } from './todos/todos.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { KeyResultsModule } from './keyresults/keyresults.module';
     ProjectsModule,
     ObjectivesModule,
     KeyResultsModule,
+    TodosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
