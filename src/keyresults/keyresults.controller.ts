@@ -40,7 +40,7 @@ export class KeyResultsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.keyResultsService.findOne(+id);
+    return this.keyResultsService.findOne(id);
   }
 
   @Patch(':id')
@@ -48,11 +48,11 @@ export class KeyResultsController {
     @Param('id') id: string,
     @Body() updateKeyResultDto: UpdateKeyResultDto,
   ) {
-    return this.keyResultsService.update(+id, updateKeyResultDto);
+    return this.keyResultsService.update(id, updateKeyResultDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.keyResultsService.remove(+id);
+  delete(@Param('id') id: string) {
+    return this.keyResultsService.delete(id);
   }
 }

@@ -59,7 +59,7 @@ export class ObjectivesService {
       { new: true },
     );
     if (!update) {
-      throw new NotFoundException("Project doesn't exist");
+      throw new NotFoundException("Objective doesn't exist");
     }
     return update;
   }
