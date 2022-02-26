@@ -15,40 +15,56 @@ export class ProjectsService {
     @InjectModel(Project.name) private projectModel: Model<ProjectDocument>,
   ) {}
 
-  async create(createProjectDto: CreateProjectDto): Promise<Project> {
-    if (await this.doesProjectExists(createProjectDto))
-      throw new ConflictException(
-        `Project ${createProjectDto.title} already exists`,
-      );
+  async create(
+    userId: string,
+    createProjectDto: CreateProjectDto,
+  ): Promise<Project> {
+    await this.duplicateValidation(createProjectDto.title);
+    createProjectDto['userId'] = userId;
     const newUser = new this.projectModel(createProjectDto);
     return newUser.save();
   }
 
-  async doesProjectExists(
-    createProjectDto: CreateProjectDto,
-  ): Promise<boolean> {
-    return !!(await this.projectModel.findOne({
-      title: createProjectDto.title,
-    }));
+  async duplicateValidation(title: string, id?: string): Promise<void> {
+    interface findQuery {
+      title: string;
+      id?: string;
+    }
+    const query: findQuery = { title: title };
+    if (id) {
+      query['_id'] = { $ne: id };
+    }
+    const result = await this.projectModel.findOne(query);
+    if (!!result) {
+      throw new ConflictException(`Project "${title}" already exists`);
+    }
   }
 
-  async findByUserId(userId: string): Promise<Project[]> {
-    const projects = await this.projectModel.find({ userId: userId });
-    return projects;
+  async find(userId: string): Promise<Project[]> {
+    interface findByQuery {
+      userId: string;
+    }
+    const query: findByQuery = { userId: userId };
+    const toDos = await this.projectModel.find(query);
+    return toDos;
   }
 
-  async findOne(id: string): Promise<Project> {
-    const project = await this.projectModel.findOne({ _id: id }).lean();
+  async findOne(userId: string, id: string): Promise<Project> {
+    const project = await this.projectModel
+      .findOne({ _id: id, userId: userId })
+      .lean();
     if (!project) throw new NotFoundException("Project doesn't exist");
     return project;
   }
 
   async update(
+    userId: string,
     id: string,
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
+    await this.duplicateValidation(updateProjectDto.title, id);
     const update = await this.projectModel.findOneAndUpdate(
-      { _id: id },
+      { _id: id, userId: userId },
       updateProjectDto,
       { new: true },
     );
@@ -58,8 +74,11 @@ export class ProjectsService {
     return update;
   }
 
-  async delete(id: string) {
-    const deleteOperation = await this.projectModel.deleteOne({ _id: id });
+  async delete(userId: string, id: string) {
+    const deleteOperation = await this.projectModel.deleteOne({
+      _id: id,
+      userId: userId,
+    });
     if (!deleteOperation.deletedCount) {
       throw new NotFoundException("Project doesn't exist");
     }
