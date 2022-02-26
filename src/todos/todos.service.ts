@@ -14,25 +14,29 @@ import { ToDo, ToDoDocument } from './models/todo.model';
 export class TodosService {
   constructor(
     @InjectModel(ToDo.name)
-    private keyResultModel: Model<ToDoDocument>,
+    private toDoModel: Model<ToDoDocument>,
   ) {}
 
   async create(userId: string, createToDoDto: CreateTodoDto): Promise<ToDo> {
-    if (await this.checkKeyResultDuplicate(createToDoDto))
-      throw new ConflictException(
-        `To-do ${createToDoDto.title} already exists`,
-      );
+    await this.duplicateValidation(createToDoDto.title);
     createToDoDto['userId'] = userId;
-    const newObjective = new this.keyResultModel(createToDoDto);
+    const newObjective = new this.toDoModel(createToDoDto);
     return newObjective.save();
   }
 
-  async checkKeyResultDuplicate(
-    createToDoDto: CreateTodoDto,
-  ): Promise<boolean> {
-    return !!(await this.keyResultModel.findOne({
-      title: createToDoDto.title,
-    }));
+  async duplicateValidation(title: string, id?: string): Promise<void> {
+    interface findQuery {
+      title: string;
+      id?: string;
+    }
+    const query: findQuery = { title: title };
+    if (id) {
+      query['_id'] = { $ne: id };
+    }
+    const result = await this.toDoModel.findOne(query);
+    if (!!result) {
+      throw new ConflictException(`To-do "${title}" already exists`);
+    }
   }
 
   async find(userId: string, id: string, field: string): Promise<ToDo[]> {
@@ -54,14 +58,14 @@ export class TodosService {
         query['keyResultId'] = id;
         break;
       default:
-        query[''] = id;
+        null;
     }
-    const toDos = await this.keyResultModel.find(query);
+    const toDos = await this.toDoModel.find(query);
     return toDos;
   }
 
   async findOne(userId: string, id: string) {
-    const toDo = await this.keyResultModel
+    const toDo = await this.toDoModel
       .findOne({ _id: id, userId: userId })
       .lean();
     if (!toDo) throw new NotFoundException("To-do doesn't exist");
@@ -75,13 +79,12 @@ export class TodosService {
   ): Promise<ToDo> {
     if (
       updateToDoDto.status !== undefined &&
-      updateToDoDto.status !== '0' &&
-      updateToDoDto.status !== '1' &&
-      updateToDoDto.status !== '2'
+      !['0', '1', '2'].includes(updateToDoDto.status)
     ) {
       throw new BadRequestException('Invalid status field');
     }
-    const update = await this.keyResultModel.findOneAndUpdate(
+    await this.duplicateValidation(updateToDoDto.title, id);
+    const update = await this.toDoModel.findOneAndUpdate(
       { _id: id, userId: userId },
       updateToDoDto,
       { new: true },
@@ -93,7 +96,7 @@ export class TodosService {
   }
 
   async delete(userId: string, id: string) {
-    const deleteOperation = await this.keyResultModel.deleteOne({
+    const deleteOperation = await this.toDoModel.deleteOne({
       _id: id,
       userId: userId,
     });

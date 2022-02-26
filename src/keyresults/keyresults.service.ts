@@ -16,52 +16,68 @@ export class KeyResultsService {
     private keyResultModel: Model<KeyResultDocument>,
   ) {}
 
-  async create(createKeyResultDto: CreateKeyResultDto): Promise<KeyResult> {
-    if (await this.checkKeyResultDuplicate(createKeyResultDto))
-      throw new ConflictException(
-        `Key Result ${createKeyResultDto.title} already exists`,
-      );
+  async create(
+    userId: string,
+    createKeyResultDto: CreateKeyResultDto,
+  ): Promise<KeyResult> {
+    await this.duplicateValidation(createKeyResultDto.title);
+    createKeyResultDto['userId'] = userId;
     const newObjective = new this.keyResultModel(createKeyResultDto);
     return newObjective.save();
   }
 
-  async checkKeyResultDuplicate(
-    createKeyResultDto: CreateKeyResultDto,
-  ): Promise<boolean> {
-    return !!(await this.keyResultModel.findOne({
-      title: createKeyResultDto.title,
-    }));
+  async duplicateValidation(title: string, id?: string): Promise<void> {
+    interface findQuery {
+      title: string;
+      id?: string;
+    }
+    const query: findQuery = { title: title };
+    if (id) {
+      query['_id'] = { $ne: id };
+    }
+    const result = await this.keyResultModel.findOne(query);
+    if (!!result) {
+      throw new ConflictException(`Key Result "${title}" already exists`);
+    }
   }
 
-  async findByUser(userId: string): Promise<KeyResult[]> {
-    const keyResults = await this.keyResultModel.find({ userId: userId });
-    return keyResults;
+  async find(userId: string, id: string, field: string): Promise<KeyResult[]> {
+    interface findByQuery {
+      userId: string;
+      projectId?: string;
+      objectiveId?: string;
+    }
+    const query: findByQuery = { userId: userId };
+    switch (field) {
+      case 'project':
+        query['projectId'] = id;
+        break;
+      case 'objective':
+        query['objectiveId'] = id;
+        break;
+      default:
+        null;
+    }
+    const toDos = await this.keyResultModel.find(query);
+    return toDos;
   }
 
-  async findByProject(projectId: string): Promise<KeyResult[]> {
-    const keyResults = await this.keyResultModel.find({ projectId: projectId });
-    return keyResults;
-  }
-
-  async findByObjective(objectiveId: string): Promise<KeyResult[]> {
-    const keyResults = await this.keyResultModel.find({
-      objectiveId: objectiveId,
-    });
-    return keyResults;
-  }
-
-  async findOne(id: string) {
-    const keyResult = await this.keyResultModel.findOne({ _id: id }).lean();
+  async findOne(userId: string, id: string) {
+    const keyResult = await this.keyResultModel
+      .findOne({ _id: id, userId: userId })
+      .lean();
     if (!keyResult) throw new NotFoundException("Key result doesn't exist");
     return keyResult;
   }
 
   async update(
+    userId: string,
     id: string,
     updateKeyResultDto: UpdateKeyResultDto,
   ): Promise<KeyResult> {
+    await this.duplicateValidation(updateKeyResultDto.title, id);
     const update = await this.keyResultModel.findOneAndUpdate(
-      { _id: id },
+      { _id: id, userId: userId },
       updateKeyResultDto,
       { new: true },
     );
@@ -71,8 +87,11 @@ export class KeyResultsService {
     return update;
   }
 
-  async delete(id: string) {
-    const deleteOperation = await this.keyResultModel.deleteOne({ _id: id });
+  async delete(userId: string, id: string) {
+    const deleteOperation = await this.keyResultModel.deleteOne({
+      _id: id,
+      userId: userId,
+    });
     if (!deleteOperation.deletedCount) {
       throw new NotFoundException("Key Result doesn't exist");
     }
