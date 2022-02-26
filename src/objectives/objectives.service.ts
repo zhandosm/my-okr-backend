@@ -16,45 +16,64 @@ export class ObjectivesService {
     private objectiveModel: Model<ObjectiveDocument>,
   ) {}
 
-  async create(createObjectiveDto: CreateObjectiveDto): Promise<Objective> {
-    if (await this.checkObjectiveDuplicate(createObjectiveDto))
-      throw new ConflictException(
-        `Objective ${createObjectiveDto.title} already exists`,
-      );
+  async create(
+    userId: string,
+    createObjectiveDto: CreateObjectiveDto,
+  ): Promise<Objective> {
+    await this.duplicateValidation(createObjectiveDto.title);
+    createObjectiveDto['userId'] = userId;
     const newObjective = new this.objectiveModel(createObjectiveDto);
     return newObjective.save();
   }
 
-  async checkObjectiveDuplicate(
-    createObjectiveDto: CreateObjectiveDto,
-  ): Promise<boolean> {
-    return !!(await this.objectiveModel.findOne({
-      title: createObjectiveDto.title,
-    }));
+  async duplicateValidation(title: string, id?: string): Promise<void> {
+    interface findQuery {
+      title: string;
+      id?: string;
+    }
+    const query: findQuery = { title: title };
+    if (id) {
+      query['_id'] = { $ne: id };
+    }
+    const result = await this.objectiveModel.findOne(query);
+    if (!!result) {
+      throw new ConflictException(`Objective "${title}" already exists`);
+    }
   }
 
-  async findByUser(userId: string): Promise<Objective[]> {
-    const objectives = await this.objectiveModel.find({ userId: userId });
-    return objectives;
+  async find(userId: string, id: string, field: string): Promise<Objective[]> {
+    interface findByQuery {
+      userId: string;
+      projectId?: string;
+    }
+    const query: findByQuery = { userId: userId };
+    switch (field) {
+      case 'project':
+        query['projectId'] = id;
+        break;
+      default:
+        null;
+    }
+    const toDos = await this.objectiveModel.find(query);
+    return toDos;
   }
 
-  async findByProject(projectId: string): Promise<Objective[]> {
-    const objectives = await this.objectiveModel.find({ projectId: projectId });
-    return objectives;
-  }
-
-  async findOne(id: string) {
-    const objective = await this.objectiveModel.findOne({ _id: id }).lean();
+  async findOne(userId: string, id: string) {
+    const objective = await this.objectiveModel
+      .findOne({ _id: id, userId: userId })
+      .lean();
     if (!objective) throw new NotFoundException("Objective doesn't exist");
     return objective;
   }
 
   async update(
+    userId: string,
     id: string,
     updateObjectiveDto: UpdateObjectiveDto,
   ): Promise<Objective> {
+    await this.duplicateValidation(updateObjectiveDto.title, id);
     const update = await this.objectiveModel.findOneAndUpdate(
-      { _id: id },
+      { _id: id, userId: userId },
       updateObjectiveDto,
       { new: true },
     );
@@ -64,8 +83,11 @@ export class ObjectivesService {
     return update;
   }
 
-  async delete(id: string) {
-    const deleteOperation = await this.objectiveModel.deleteOne({ _id: id });
+  async delete(userId: string, id: string) {
+    const deleteOperation = await this.objectiveModel.deleteOne({
+      _id: id,
+      userId: userId,
+    });
     if (!deleteOperation.deletedCount) {
       throw new NotFoundException("Objective doesn't exist");
     }
