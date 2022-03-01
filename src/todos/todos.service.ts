@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { ToDo, ToDoDocument } from './models/todo.model';
@@ -39,12 +39,16 @@ export class TodosService {
     }
   }
 
-  async find(userId: string, id: string, field: string): Promise<ToDo[]> {
+  async find(
+    userId: string,
+    id: string | Types.ObjectId,
+    field: string,
+  ): Promise<ToDo[]> {
     interface findByQuery {
       userId: string;
-      projectId?: string;
-      objectiveId?: string;
-      keyResultId?: string;
+      projectId?: string | Types.ObjectId;
+      objectiveId?: string | Types.ObjectId;
+      keyResultId?: string | Types.ObjectId;
     }
     const query: findByQuery = { userId: userId };
     switch (field) {
@@ -60,7 +64,7 @@ export class TodosService {
       default:
         null;
     }
-    const toDos = await this.toDoModel.find(query);
+    const toDos = await this.toDoModel.find(query).sort({ _id: -1 });
     return toDos;
   }
 

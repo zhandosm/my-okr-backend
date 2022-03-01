@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective, ObjectiveDocument } from './models/objective.model';
@@ -41,10 +41,14 @@ export class ObjectivesService {
     }
   }
 
-  async find(userId: string, id: string, field: string): Promise<Objective[]> {
+  async find(
+    userId: string,
+    id: string | Types.ObjectId,
+    field: string,
+  ): Promise<Objective[]> {
     interface findByQuery {
       userId: string;
-      projectId?: string;
+      projectId?: string | Types.ObjectId;
     }
     const query: findByQuery = { userId: userId };
     switch (field) {
@@ -54,7 +58,7 @@ export class ObjectivesService {
       default:
         null;
     }
-    const toDos = await this.objectiveModel.find(query);
+    const toDos = await this.objectiveModel.find(query).sort({ _id: -1 });
     return toDos;
   }
 

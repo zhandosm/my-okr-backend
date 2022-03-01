@@ -26,6 +26,12 @@ export class UsersService {
     return newUser.save();
   }
 
+  async findById(id: string): Promise<User> {
+    const user = await this.userModel.findOne({ $_id: id }).lean();
+    if (!user) throw new NotFoundException("User doesn't exist");
+    return user;
+  }
+
   async findOne(username: string): Promise<User> {
     const orQuery = [{ username: username }, { email: username }];
     const user = await this.userModel.findOne({ $or: orQuery }).lean();

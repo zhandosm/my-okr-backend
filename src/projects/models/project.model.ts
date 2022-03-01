@@ -6,6 +6,8 @@ export type ProjectDocument = Project & Document;
 
 @Schema({ timestamps: true })
 export class Project {
+  @Prop()
+  _id: Types.ObjectId;
   @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
   userId: Types.ObjectId;
   @Prop()

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Project, ProjectDocument } from './models/project.model';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
@@ -40,12 +40,12 @@ export class ProjectsService {
     }
   }
 
-  async find(userId: string): Promise<Project[]> {
+  async find(userId: string | Types.ObjectId): Promise<Project[]> {
     interface findByQuery {
-      userId: string;
+      userId: string | Types.ObjectId;
     }
     const query: findByQuery = { userId: userId };
-    const toDos = await this.projectModel.find(query);
+    const toDos = await this.projectModel.find(query).sort({ _id: -1 });
     return toDos;
   }
 

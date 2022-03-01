@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateKeyResultDto } from './dto/create-keyresult.dto';
 import { UpdateKeyResultDto } from './dto/update-keyresult.dto';
 import { KeyResult, KeyResultDocument } from './models/keyresult.model';
@@ -41,11 +41,15 @@ export class KeyResultsService {
     }
   }
 
-  async find(userId: string, id: string, field: string): Promise<KeyResult[]> {
+  async find(
+    userId: string,
+    id: string | Types.ObjectId,
+    field: string,
+  ): Promise<KeyResult[]> {
     interface findByQuery {
       userId: string;
-      projectId?: string;
-      objectiveId?: string;
+      projectId?: string | Types.ObjectId;
+      objectiveId?: string | Types.ObjectId;
     }
     const query: findByQuery = { userId: userId };
     switch (field) {
@@ -58,7 +62,7 @@ export class KeyResultsService {
       default:
         null;
     }
-    const toDos = await this.keyResultModel.find(query);
+    const toDos = await this.keyResultModel.find(query).sort({ _id: -1 });
     return toDos;
   }
 

@@ -9,6 +9,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { ObjectivesModule } from './objectives/objectives.module';
 import { KeyResultsModule } from './keyresults/keyresults.module';
 import { TodosModule } from './todos/todos.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TodosModule } from './todos/todos.module';
     ObjectivesModule,
     KeyResultsModule,
     TodosModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
