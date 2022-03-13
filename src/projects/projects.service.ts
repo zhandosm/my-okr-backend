@@ -5,14 +5,16 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { Model, Types } from 'mongoose';
+import { isValidObjectId, Model, Mongoose, Types } from 'mongoose';
 import { Project, ProjectDocument } from './models/project.model';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { ObjectivesService } from 'src/objectives/objectives.service';
 
 @Injectable()
 export class ProjectsService {
   constructor(
     @InjectModel(Project.name) private projectModel: Model<ProjectDocument>,
+    private objectivesService: ObjectivesService,
   ) {}
 
   async create(
@@ -45,15 +47,17 @@ export class ProjectsService {
       userId: string | Types.ObjectId;
     }
     const query: findByQuery = { userId: userId };
-    const toDos = await this.projectModel.find(query).sort({ _id: -1 });
-    return toDos;
+    const projects = await this.projectModel.find(query).sort({ _id: -1 });
+    return projects;
   }
 
   async findOne(userId: string, id: string): Promise<Project> {
     const project = await this.projectModel
-      .findOne({ _id: id, userId: userId })
+      .findOne({ _id: new Types.ObjectId(id), userId: userId })
       .lean();
     if (!project) throw new NotFoundException("Project doesn't exist");
+    const objectives = await this.objectivesService.find(userId, id, 'project');
+    project['objectives'] = objectives;
     return project;
   }
 
