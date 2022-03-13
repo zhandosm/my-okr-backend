@@ -8,12 +8,14 @@ import { Model, Types } from 'mongoose';
 import { CreateKeyResultDto } from './dto/create-keyresult.dto';
 import { UpdateKeyResultDto } from './dto/update-keyresult.dto';
 import { KeyResult, KeyResultDocument } from './models/keyresult.model';
+import { TodosService } from '../todos/todos.service';
 
 @Injectable()
 export class KeyResultsService {
   constructor(
     @InjectModel(KeyResult.name)
     private keyResultModel: Model<KeyResultDocument>,
+    private todosService: TodosService,
   ) {}
 
   async create(
@@ -68,9 +70,11 @@ export class KeyResultsService {
 
   async findOne(userId: string, id: string) {
     const keyResult = await this.keyResultModel
-      .findOne({ _id: id, userId: userId })
+      .findOne({ _id: new Types.ObjectId(id), userId: userId })
       .lean();
     if (!keyResult) throw new NotFoundException("Key result doesn't exist");
+    const toDos = await this.todosService.find(userId, id, 'keyresult');
+    keyResult['toDos'] = toDos;
     return keyResult;
   }
 

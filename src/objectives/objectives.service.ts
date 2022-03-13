@@ -8,12 +8,14 @@ import { Model, Types } from 'mongoose';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective, ObjectiveDocument } from './models/objective.model';
+import { KeyResultsService } from '../keyresults/keyresults.service';
 
 @Injectable()
 export class ObjectivesService {
   constructor(
     @InjectModel(Objective.name)
     private objectiveModel: Model<ObjectiveDocument>,
+    private keyResultsService: KeyResultsService,
   ) {}
 
   async create(
@@ -58,15 +60,21 @@ export class ObjectivesService {
       default:
         null;
     }
-    const toDos = await this.objectiveModel.find(query).sort({ _id: -1 });
-    return toDos;
+    const objectives = await this.objectiveModel.find(query).sort({ _id: -1 });
+    return objectives;
   }
 
   async findOne(userId: string, id: string) {
     const objective = await this.objectiveModel
-      .findOne({ _id: id, userId: userId })
+      .findOne({ _id: new Types.ObjectId(id), userId: userId })
       .lean();
     if (!objective) throw new NotFoundException("Objective doesn't exist");
+    const keyResults = await this.keyResultsService.find(
+      userId,
+      id,
+      'projectId',
+    );
+    objective['keyResults'] = keyResults;
     return objective;
   }
 
