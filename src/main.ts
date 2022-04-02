@@ -15,7 +15,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new MongoooseExceptionFilter());
   // CORS
-  app.enableCors();
+  app.enableCors({ origin: process.env.ORIGIN, credentials: true });
   // Swagger Setup
   const config = new DocumentBuilder()
     .setTitle('MyOKR')

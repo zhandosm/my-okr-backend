@@ -33,6 +33,7 @@
     "bcrypt": "^5.0.1",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.2",
+    "cookie": "^0.4.2",
     "express-session": "^1.17.2",
     "mongoose": "^6.1.8",
     "passport": "^0.5.2",
