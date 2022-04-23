@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,10 +19,15 @@ export class TodosService {
   ) {}
 
   async create(userId: string, createToDoDto: CreateTodoDto): Promise<ToDo> {
-    await this.duplicateValidation(createToDoDto.title);
-    createToDoDto['userId'] = userId;
-    const newObjective = new this.toDoModel(createToDoDto);
-    return newObjective.save();
+    try {
+      await this.duplicateValidation(createToDoDto.title);
+      createToDoDto['userId'] = userId;
+      const newObjective = new this.toDoModel(createToDoDto);
+      return newObjective.save();
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async duplicateValidation(title: string, id?: string): Promise<void> {
@@ -44,36 +50,46 @@ export class TodosService {
     id: string | Types.ObjectId,
     field: string,
   ): Promise<ToDo[]> {
-    interface findByQuery {
-      userId: string;
-      projectId?: string | Types.ObjectId;
-      objectiveId?: string | Types.ObjectId;
-      keyResultId?: string | Types.ObjectId;
+    try {
+      interface findByQuery {
+        userId: string;
+        projectId?: string | Types.ObjectId;
+        objectiveId?: string | Types.ObjectId;
+        keyResultId?: string | Types.ObjectId;
+      }
+      const query: findByQuery = { userId: userId };
+      switch (field) {
+        case 'project':
+          query['projectId'] = id;
+          break;
+        case 'objective':
+          query['objectiveId'] = id;
+          break;
+        case 'keyresult':
+          query['keyResultId'] = id;
+          break;
+        default:
+          null;
+      }
+      const toDos = await this.toDoModel.find(query).sort({ _id: -1 });
+      return toDos;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    const query: findByQuery = { userId: userId };
-    switch (field) {
-      case 'project':
-        query['projectId'] = id;
-        break;
-      case 'objective':
-        query['objectiveId'] = id;
-        break;
-      case 'keyresult':
-        query['keyResultId'] = id;
-        break;
-      default:
-        null;
-    }
-    const toDos = await this.toDoModel.find(query).sort({ _id: -1 });
-    return toDos;
   }
 
   async findOne(userId: string, id: string) {
-    const toDo = await this.toDoModel
-      .findOne({ _id: id, userId: userId })
-      .lean();
-    if (!toDo) throw new NotFoundException("To-do doesn't exist");
-    return toDo;
+    try {
+      const toDo = await this.toDoModel
+        .findOne({ _id: id, userId: userId })
+        .lean();
+      if (!toDo) throw new NotFoundException("To-do doesn't exist");
+      return toDo;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async update(
@@ -81,32 +97,42 @@ export class TodosService {
     id: string,
     updateToDoDto: UpdateTodoDto,
   ): Promise<ToDo> {
-    if (
-      updateToDoDto.status !== undefined &&
-      !['0', '1', '2'].includes(updateToDoDto.status)
-    ) {
-      throw new BadRequestException('Invalid status field');
+    try {
+      if (
+        updateToDoDto.status !== undefined &&
+        !['0', '1', '2'].includes(updateToDoDto.status)
+      ) {
+        throw new BadRequestException('Invalid status field');
+      }
+      await this.duplicateValidation(updateToDoDto.title, id);
+      const update = await this.toDoModel.findOneAndUpdate(
+        { _id: id, userId: userId },
+        updateToDoDto,
+        { new: true },
+      );
+      if (!update) {
+        throw new NotFoundException("To-do doesn't exist");
+      }
+      return update;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    await this.duplicateValidation(updateToDoDto.title, id);
-    const update = await this.toDoModel.findOneAndUpdate(
-      { _id: id, userId: userId },
-      updateToDoDto,
-      { new: true },
-    );
-    if (!update) {
-      throw new NotFoundException("To-do doesn't exist");
-    }
-    return update;
   }
 
   async delete(userId: string, id: string) {
-    const deleteOperation = await this.toDoModel.deleteOne({
-      _id: id,
-      userId: userId,
-    });
-    if (!deleteOperation.deletedCount) {
-      throw new NotFoundException("To-do doesn't exist");
+    try {
+      const deleteOperation = await this.toDoModel.deleteOne({
+        _id: id,
+        userId: userId,
+      });
+      if (!deleteOperation.deletedCount) {
+        throw new NotFoundException("To-do doesn't exist");
+      }
+      return deleteOperation;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    return deleteOperation;
   }
 }
