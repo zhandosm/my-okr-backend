@@ -86,7 +86,7 @@ export class ObjectivesService {
       const keyResults = await this.keyResultsService.find(
         userId,
         id,
-        'projectId',
+        'objective',
       );
       objective['keyResults'] = keyResults;
       return objective;
