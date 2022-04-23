@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,10 +22,15 @@ export class ProjectsService {
     userId: string,
     createProjectDto: CreateProjectDto,
   ): Promise<Project> {
-    await this.duplicateValidation(createProjectDto.title);
-    createProjectDto['userId'] = userId;
-    const newUser = new this.projectModel(createProjectDto);
-    return newUser.save();
+    try {
+      await this.duplicateValidation(createProjectDto.title);
+      createProjectDto['userId'] = userId;
+      const newUser = new this.projectModel(createProjectDto);
+      return newUser.save();
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async duplicateValidation(title: string, id?: string): Promise<void> {
@@ -43,22 +49,32 @@ export class ProjectsService {
   }
 
   async find(userId: string | Types.ObjectId): Promise<Project[]> {
-    interface findByQuery {
-      userId: string | Types.ObjectId;
+    try {
+      interface findByQuery {
+        userId: string | Types.ObjectId;
+      }
+      const query: findByQuery = { userId: userId };
+      const projects = await this.projectModel.find(query).sort({ _id: -1 });
+      return projects;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    const query: findByQuery = { userId: userId };
-    const projects = await this.projectModel.find(query).sort({ _id: -1 });
-    return projects;
   }
 
   async findOne(userId: string, id: string): Promise<Project> {
-    const project = await this.projectModel
-      .findOne({ _id: new Types.ObjectId(id), userId: userId })
-      .lean();
-    if (!project) throw new NotFoundException("Project doesn't exist");
-    const objectives = await this.objectivesService.find(userId, id, 'project');
-    project['objectives'] = objectives;
-    return project;
+    try {
+      const project = await this.projectModel
+        .findOne({ _id: new Types.ObjectId(id), userId: userId })
+        .lean();
+      if (!project) throw new NotFoundException("Project doesn't exist");
+      const objectives = await this.objectivesService.find(userId, id, 'project');
+      project['objectives'] = objectives;
+      return project;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async update(
@@ -66,26 +82,36 @@ export class ProjectsService {
     id: string,
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
-    await this.duplicateValidation(updateProjectDto.title, id);
-    const update = await this.projectModel.findOneAndUpdate(
-      { _id: id, userId: userId },
-      updateProjectDto,
-      { new: true },
-    );
-    if (!update) {
-      throw new NotFoundException("Project doesn't exist");
+    try {
+      await this.duplicateValidation(updateProjectDto.title, id);
+      const update = await this.projectModel.findOneAndUpdate(
+        { _id: id, userId: userId },
+        updateProjectDto,
+        { new: true },
+      );
+      if (!update) {
+        throw new NotFoundException("Project doesn't exist");
+      }
+      return update;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    return update;
   }
 
   async delete(userId: string, id: string) {
-    const deleteOperation = await this.projectModel.deleteOne({
-      _id: id,
-      userId: userId,
-    });
-    if (!deleteOperation.deletedCount) {
-      throw new NotFoundException("Project doesn't exist");
+    try {
+      const deleteOperation = await this.projectModel.deleteOne({
+        _id: id,
+        userId: userId,
+      });
+      if (!deleteOperation.deletedCount) {
+        throw new NotFoundException("Project doesn't exist");
+      }
+      return deleteOperation;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    return deleteOperation;
   }
 }
