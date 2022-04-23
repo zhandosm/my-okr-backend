@@ -34,16 +34,26 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<User> {
-    const user = await this.userModel.findOne({ $_id: id }).lean();
-    if (!user) throw new NotFoundException("User doesn't exist");
-    return user;
+    try {
+      const user = await this.userModel.findOne({ $_id: id }).lean();
+      if (!user) throw new NotFoundException("User doesn't exist");
+      return user;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async findOne(username: string): Promise<User> {
-    const orQuery = [{ username: username }, { email: username }];
-    const user = await this.userModel.findOne({ $or: orQuery }).lean();
-    if (!user) throw new NotFoundException("User doesn't exist");
-    return user;
+    try {
+      const orQuery = [{ username: username }, { email: username }];
+      const user = await this.userModel.findOne({ $or: orQuery }).lean();
+      if (!user) throw new NotFoundException("User doesn't exist");
+      return user;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
