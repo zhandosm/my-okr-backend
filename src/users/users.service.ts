@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -15,15 +16,21 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    if (await this.doesUserExists(createUserDto))
-      throw new ConflictException(
-        'User with following username or email exists',
-      );
-    const saltOrRounds = 10;
-    const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
-    createUserDto.password = hash;
-    const newUser = new this.userModel(createUserDto);
-    return newUser.save();
+    try {
+      if (await this.doesUserExists(createUserDto))
+        throw new ConflictException(
+          'User with following username or email exists',
+        );
+      const saltOrRounds = 10;
+      const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
+      createUserDto.password = hash;
+      const newUser = new this.userModel(createUserDto);
+      const savedUser = await newUser.save();
+      return savedUser;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async findById(id: string): Promise<User> {

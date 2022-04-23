@@ -2,7 +2,7 @@ import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { ProjectsService } from '../projects/projects.service';
 import { ObjectivesService } from '../objectives/objectives.service';
-import { User } from 'src/users/models/user.model';
+import { User, UserDocument } from 'src/users/models/user.model';
 import { Project } from 'src/projects/models/project.model';
 import { Types } from 'mongoose';
 import { Objective } from 'src/objectives/models/objective.model';
@@ -25,7 +25,7 @@ export class DashboardService {
         objectives: Objective[];
       };
     }
-    const userData: User = await this.usersService.findById(userId);
+    const userData: any = await this.usersService.findById(userId);
     const projects: Project[] = await this.projectsService.find(userId);
     let initialProject: Project = projects[0];
     for (const project of projects) {
