@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -22,10 +23,15 @@ export class KeyResultsService {
     userId: string,
     createKeyResultDto: CreateKeyResultDto,
   ): Promise<KeyResult> {
-    await this.duplicateValidation(createKeyResultDto.title);
-    createKeyResultDto['userId'] = userId;
-    const newObjective = new this.keyResultModel(createKeyResultDto);
-    return newObjective.save();
+    try {
+      await this.duplicateValidation(createKeyResultDto.title);
+      createKeyResultDto['userId'] = userId;
+      const newObjective = new this.keyResultModel(createKeyResultDto);
+      return newObjective.save();
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async duplicateValidation(title: string, id?: string): Promise<void> {
@@ -48,34 +54,44 @@ export class KeyResultsService {
     id: string | Types.ObjectId,
     field: string,
   ): Promise<KeyResult[]> {
-    interface findByQuery {
-      userId: string;
-      projectId?: string | Types.ObjectId;
-      objectiveId?: string | Types.ObjectId;
+    try {
+      interface findByQuery {
+        userId: string;
+        projectId?: string | Types.ObjectId;
+        objectiveId?: string | Types.ObjectId;
+      }
+      const query: findByQuery = { userId: userId };
+      switch (field) {
+        case 'project':
+          query['projectId'] = id;
+          break;
+        case 'objective':
+          query['objectiveId'] = id;
+          break;
+        default:
+          null;
+      }
+      const toDos = await this.keyResultModel.find(query).sort({ _id: -1 });
+      return toDos;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    const query: findByQuery = { userId: userId };
-    switch (field) {
-      case 'project':
-        query['projectId'] = id;
-        break;
-      case 'objective':
-        query['objectiveId'] = id;
-        break;
-      default:
-        null;
-    }
-    const toDos = await this.keyResultModel.find(query).sort({ _id: -1 });
-    return toDos;
   }
 
   async findOne(userId: string, id: string) {
-    const keyResult = await this.keyResultModel
-      .findOne({ _id: new Types.ObjectId(id), userId: userId })
-      .lean();
-    if (!keyResult) throw new NotFoundException("Key result doesn't exist");
-    const toDos = await this.todosService.find(userId, id, 'keyresult');
-    keyResult['toDos'] = toDos;
-    return keyResult;
+    try {
+      const keyResult = await this.keyResultModel
+        .findOne({ _id: new Types.ObjectId(id), userId: userId })
+        .lean();
+      if (!keyResult) throw new NotFoundException("Key result doesn't exist");
+      const toDos = await this.todosService.find(userId, id, 'keyresult');
+      keyResult['toDos'] = toDos;
+      return keyResult;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async update(
@@ -83,26 +99,36 @@ export class KeyResultsService {
     id: string,
     updateKeyResultDto: UpdateKeyResultDto,
   ): Promise<KeyResult> {
-    await this.duplicateValidation(updateKeyResultDto.title, id);
-    const update = await this.keyResultModel.findOneAndUpdate(
-      { _id: id, userId: userId },
-      updateKeyResultDto,
-      { new: true },
-    );
-    if (!update) {
-      throw new NotFoundException("Key Result doesn't exist");
+    try {
+      await this.duplicateValidation(updateKeyResultDto.title, id);
+      const update = await this.keyResultModel.findOneAndUpdate(
+        { _id: id, userId: userId },
+        updateKeyResultDto,
+        { new: true },
+      );
+      if (!update) {
+        throw new NotFoundException("Key Result doesn't exist");
+      }
+      return update;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    return update;
   }
 
   async delete(userId: string, id: string) {
-    const deleteOperation = await this.keyResultModel.deleteOne({
-      _id: id,
-      userId: userId,
-    });
-    if (!deleteOperation.deletedCount) {
-      throw new NotFoundException("Key Result doesn't exist");
+    try {
+      const deleteOperation = await this.keyResultModel.deleteOne({
+        _id: id,
+        userId: userId,
+      });
+      if (!deleteOperation.deletedCount) {
+        throw new NotFoundException("Key Result doesn't exist");
+      }
+      return deleteOperation;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    return deleteOperation;
   }
 }
