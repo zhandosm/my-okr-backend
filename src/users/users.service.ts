@@ -16,11 +16,19 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    let duplicate: boolean | null = null;
     try {
-      if (await this.doesUserExists(createUserDto))
-        throw new ConflictException(
-          'User with following username or email exists',
-        );
+      duplicate = await this.doesUserExists(createUserDto);
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
+    if (duplicate)
+      throw new ConflictException(
+        'User with following username or email exists',
+      );
+
+    try {
       const saltOrRounds = 10;
       const hash = await bcrypt.hash(createUserDto.password, saltOrRounds);
       createUserDto.password = hash;
