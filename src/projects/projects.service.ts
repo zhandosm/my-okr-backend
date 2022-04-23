@@ -68,7 +68,11 @@ export class ProjectsService {
         .findOne({ _id: new Types.ObjectId(id), userId: userId })
         .lean();
       if (!project) throw new NotFoundException("Project doesn't exist");
-      const objectives = await this.objectivesService.find(userId, id, 'project');
+      const objectives = await this.objectivesService.find(
+        userId,
+        id,
+        'project',
+      );
       project['objectives'] = objectives;
       return project;
     } catch (err) {

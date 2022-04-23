@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -22,10 +23,15 @@ export class ObjectivesService {
     userId: string,
     createObjectiveDto: CreateObjectiveDto,
   ): Promise<Objective> {
-    await this.duplicateValidation(createObjectiveDto.title);
-    createObjectiveDto['userId'] = userId;
-    const newObjective = new this.objectiveModel(createObjectiveDto);
-    return newObjective.save();
+    try {
+      await this.duplicateValidation(createObjectiveDto.title);
+      createObjectiveDto['userId'] = userId;
+      const newObjective = new this.objectiveModel(createObjectiveDto);
+      return newObjective.save();
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async duplicateValidation(title: string, id?: string): Promise<void> {
@@ -48,34 +54,46 @@ export class ObjectivesService {
     id: string | Types.ObjectId,
     field: string,
   ): Promise<Objective[]> {
-    interface findByQuery {
-      userId: string;
-      projectId?: string | Types.ObjectId;
+    try {
+      interface findByQuery {
+        userId: string;
+        projectId?: string | Types.ObjectId;
+      }
+      const query: findByQuery = { userId: userId };
+      switch (field) {
+        case 'project':
+          query['projectId'] = id;
+          break;
+        default:
+          null;
+      }
+      const objectives = await this.objectiveModel
+        .find(query)
+        .sort({ _id: -1 });
+      return objectives;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    const query: findByQuery = { userId: userId };
-    switch (field) {
-      case 'project':
-        query['projectId'] = id;
-        break;
-      default:
-        null;
-    }
-    const objectives = await this.objectiveModel.find(query).sort({ _id: -1 });
-    return objectives;
   }
 
   async findOne(userId: string, id: string) {
-    const objective = await this.objectiveModel
-      .findOne({ _id: new Types.ObjectId(id), userId: userId })
-      .lean();
-    if (!objective) throw new NotFoundException("Objective doesn't exist");
-    const keyResults = await this.keyResultsService.find(
-      userId,
-      id,
-      'projectId',
-    );
-    objective['keyResults'] = keyResults;
-    return objective;
+    try {
+      const objective = await this.objectiveModel
+        .findOne({ _id: new Types.ObjectId(id), userId: userId })
+        .lean();
+      if (!objective) throw new NotFoundException("Objective doesn't exist");
+      const keyResults = await this.keyResultsService.find(
+        userId,
+        id,
+        'projectId',
+      );
+      objective['keyResults'] = keyResults;
+      return objective;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
   }
 
   async update(
@@ -83,26 +101,36 @@ export class ObjectivesService {
     id: string,
     updateObjectiveDto: UpdateObjectiveDto,
   ): Promise<Objective> {
-    await this.duplicateValidation(updateObjectiveDto.title, id);
-    const update = await this.objectiveModel.findOneAndUpdate(
-      { _id: id, userId: userId },
-      updateObjectiveDto,
-      { new: true },
-    );
-    if (!update) {
-      throw new NotFoundException("Objective doesn't exist");
+    try {
+      await this.duplicateValidation(updateObjectiveDto.title, id);
+      const update = await this.objectiveModel.findOneAndUpdate(
+        { _id: id, userId: userId },
+        updateObjectiveDto,
+        { new: true },
+      );
+      if (!update) {
+        throw new NotFoundException("Objective doesn't exist");
+      }
+      return update;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    return update;
   }
 
   async delete(userId: string, id: string) {
-    const deleteOperation = await this.objectiveModel.deleteOne({
-      _id: id,
-      userId: userId,
-    });
-    if (!deleteOperation.deletedCount) {
-      throw new NotFoundException("Objective doesn't exist");
+    try {
+      const deleteOperation = await this.objectiveModel.deleteOne({
+        _id: id,
+        userId: userId,
+      });
+      if (!deleteOperation.deletedCount) {
+        throw new NotFoundException("Objective doesn't exist");
+      }
+      return deleteOperation;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
     }
-    return deleteOperation;
   }
 }
