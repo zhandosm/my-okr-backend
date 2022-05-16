@@ -10,6 +10,7 @@ import { CreateKeyResultDto } from './dto/create-keyresult.dto';
 import { UpdateKeyResultDto } from './dto/update-keyresult.dto';
 import { KeyResult, KeyResultDocument } from './models/keyresult.model';
 import { TodosService } from '../todos/todos.service';
+import { ToDo } from 'src/todos/models/todo.model';
 
 @Injectable()
 export class KeyResultsService {
@@ -83,12 +84,20 @@ export class KeyResultsService {
 
   async findOne(userId: string, id: string) {
     try {
+      interface ClassifiedToDosObj {
+        0: ToDo[];
+        1: ToDo[];
+        2: ToDo[];
+      }
+
       const keyResult = await this.keyResultModel
         .findOne({ _id: new Types.ObjectId(id), userId: userId })
         .lean();
       if (!keyResult) throw new NotFoundException("Key result doesn't exist");
       const toDos = await this.todosService.find(userId, id, 'keyresult');
-      keyResult['toDos'] = toDos;
+      const classifiedToDos: ClassifiedToDosObj = { 0: [], 1: [], 2: [] };
+      for (const toDo of toDos) classifiedToDos[toDo.status].push(toDo);
+      keyResult['toDos'] = classifiedToDos;
       return keyResult;
     } catch (err) {
       console.log(err);
