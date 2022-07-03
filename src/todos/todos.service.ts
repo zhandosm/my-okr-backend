@@ -20,7 +20,7 @@ export class TodosService {
 
   async create(userId: string, createToDoDto: CreateTodoDto): Promise<ToDo> {
     try {
-      await this.duplicateValidation(createToDoDto.title);
+      // await this.duplicateValidation(createToDoDto.title);
       createToDoDto['userId'] = userId;
       const newObjective = new this.toDoModel(createToDoDto);
       return newObjective.save();
