@@ -6,7 +6,7 @@ import { Objective } from 'src/objectives/models/objective.model';
 
 export type KeyResultDocument = KeyResult & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class KeyResult {
   @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
   userId: Types.ObjectId;

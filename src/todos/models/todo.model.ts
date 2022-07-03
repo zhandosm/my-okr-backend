@@ -7,7 +7,7 @@ import { KeyResult } from 'src/keyresults/models/keyresult.model';
 
 export type ToDoDocument = ToDo & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class ToDo {
   @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
   userId: Types.ObjectId;

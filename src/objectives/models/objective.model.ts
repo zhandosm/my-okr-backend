@@ -5,7 +5,7 @@ import { Project } from 'src/projects/models/project.model';
 
 export type ObjectiveDocument = Objective & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Objective {
   @Prop({ type: SchemaTypes.ObjectId, ref: User.name })
   userId: Types.ObjectId;

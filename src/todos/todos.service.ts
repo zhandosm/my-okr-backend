@@ -71,7 +71,7 @@ export class TodosService {
         default:
           null;
       }
-      const toDos = await this.toDoModel.find(query);
+      const toDos = await this.toDoModel.find(query).sort({ updatedAt: 1 });
       return toDos;
     } catch (err) {
       console.log(err);
