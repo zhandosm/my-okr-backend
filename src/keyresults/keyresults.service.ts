@@ -72,9 +72,7 @@ export class KeyResultsService {
         default:
           null;
       }
-      const keyResults = await this.keyResultModel
-        .find(query)
-        .sort({ _id: -1 });
+      const keyResults = await this.keyResultModel.find(query);
       return keyResults;
     } catch (err) {
       console.log(err);

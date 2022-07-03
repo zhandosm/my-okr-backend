@@ -67,9 +67,7 @@ export class ObjectivesService {
         default:
           null;
       }
-      const objectives = await this.objectiveModel
-        .find(query)
-        .sort({ _id: -1 });
+      const objectives = await this.objectiveModel.find(query);
       return objectives;
     } catch (err) {
       console.log(err);

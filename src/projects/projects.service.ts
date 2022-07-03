@@ -54,7 +54,7 @@ export class ProjectsService {
         userId: string | Types.ObjectId;
       }
       const query: findByQuery = { userId: userId };
-      const projects = await this.projectModel.find(query).sort({ _id: -1 });
+      const projects = await this.projectModel.find(query);
       return projects;
     } catch (err) {
       console.log(err);
