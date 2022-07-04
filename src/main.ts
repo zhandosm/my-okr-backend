@@ -16,7 +16,7 @@ async function bootstrap() {
   app.useGlobalFilters(new MongoooseExceptionFilter());
   // CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3030'],
+    origin: ['http://localhost:8080', 'http://localhost:3030'],
     credentials: true,
     methods: ['GET, POST', 'PATCH', 'DELETE', 'PUT'],
     allowedHeaders: ['Content-Type', '*', 'Authorization'],
@@ -29,6 +29,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  await app.listen(3000);
+  await app.listen(8080);
 }
 bootstrap();
