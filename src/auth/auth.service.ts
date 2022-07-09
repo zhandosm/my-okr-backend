@@ -44,4 +44,23 @@ export class AuthService {
       throw new InternalServerErrorException(err.message);
     }
   }
+
+  async logout(user: any, res: Response) {
+    try {
+      res.setHeader(
+        'Set-Cookie',
+        serialize('Authorization', ``, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          sameSite: 'lax',
+          maxAge: 0,
+          path: '/',
+        }),
+      );
+      return res.status(200).json();
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
+  }
 }

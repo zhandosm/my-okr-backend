@@ -14,6 +14,11 @@ export class AuthController {
     return this.authService.login(req.user, res);
   }
 
+  @Post('/logout')
+  logout(@Req() req: Request, @Res() res: Response): object {
+    return this.authService.logout(req.user, res);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('/check')
   getAuth(): boolean {
