@@ -24,7 +24,7 @@ export class ObjectivesService {
     createObjectiveDto: CreateObjectiveDto,
   ): Promise<Objective> {
     try {
-      await this.duplicateValidation(createObjectiveDto.title);
+      // await this.duplicateValidation(createObjectiveDto.title);
       createObjectiveDto['userId'] = userId;
       const newObjective = new this.objectiveModel(createObjectiveDto);
       return newObjective.save();

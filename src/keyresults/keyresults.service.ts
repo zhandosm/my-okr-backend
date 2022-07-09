@@ -25,7 +25,7 @@ export class KeyResultsService {
     createKeyResultDto: CreateKeyResultDto,
   ): Promise<KeyResult> {
     try {
-      await this.duplicateValidation(createKeyResultDto.title);
+      // await this.duplicateValidation(createKeyResultDto.title);
       createKeyResultDto['userId'] = userId;
       const newObjective = new this.keyResultModel(createKeyResultDto);
       return newObjective.save();
