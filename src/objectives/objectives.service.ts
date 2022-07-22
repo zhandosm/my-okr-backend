@@ -10,6 +10,7 @@ import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { Objective, ObjectiveDocument } from './models/objective.model';
 import { KeyResultsService } from '../keyresults/keyresults.service';
+import { TodosService } from 'src/todos/todos.service';
 
 @Injectable()
 export class ObjectivesService {
@@ -17,6 +18,7 @@ export class ObjectivesService {
     @InjectModel(Objective.name)
     private objectiveModel: Model<ObjectiveDocument>,
     private keyResultsService: KeyResultsService,
+    private toDosService: TodosService,
   ) {}
 
   async create(
@@ -125,6 +127,8 @@ export class ObjectivesService {
       if (!deleteOperation.deletedCount) {
         throw new NotFoundException("Objective doesn't exist");
       }
+      await this.keyResultsService.deleteByObjectiveId(userId, id);
+      await this.toDosService.deleteByObjectiveId(userId, id);
       return deleteOperation;
     } catch (err) {
       console.log(err);

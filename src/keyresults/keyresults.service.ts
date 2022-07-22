@@ -140,4 +140,17 @@ export class KeyResultsService {
       throw new InternalServerErrorException(err.message);
     }
   }
+
+  async deleteByObjectiveId(userId: string, objectiveId: string) {
+    try {
+      const deleteOperation = await this.keyResultModel.deleteMany({
+        objectiveId: objectiveId,
+        userId: userId,
+      });
+      return deleteOperation;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
+  }
 }

@@ -135,4 +135,17 @@ export class TodosService {
       throw new InternalServerErrorException(err.message);
     }
   }
+
+  async deleteByObjectiveId(userId: string, objectiveId: string) {
+    try {
+      const deleteOperation = await this.toDoModel.deleteMany({
+        objectiveId: objectiveId,
+        userId: userId,
+      });
+      return deleteOperation;
+    } catch (err) {
+      console.log(err);
+      throw new InternalServerErrorException(err.message);
+    }
+  }
 }
