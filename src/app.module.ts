@@ -1,4 +1,3 @@
-import { MongooseModule } from '@nestjs/mongoose';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,11 +10,17 @@ import { KeyResultsModule } from './keyresults/keyresults.module';
 import { TodosModule } from './todos/todos.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AppLoggerMiddleware } from './common/middlewares/http-logger.middleware';
+import { TestModule } from './test/test.module';
+import { DatabaseModule } from './database/database.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.DATABASE_CONNECTION_URL),
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 10,
+    }),
     UsersModule,
     AuthModule,
     ProjectsModule,
@@ -23,6 +28,8 @@ import { AppLoggerMiddleware } from './common/middlewares/http-logger.middleware
     KeyResultsModule,
     TodosModule,
     DashboardModule,
+    DatabaseModule,
+    TestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
